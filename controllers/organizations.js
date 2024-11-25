@@ -3,13 +3,14 @@ const Org = require('../models/Organization');
 module.exports = {
   createOrg,
   readOrg,
+  readAllOrgs,
   updateOrg,
   deleteOrg
 };
 
 async function createOrg(req, res) {
   try {
-    const { managerId, name, address } = req.body;
+    const { managerId, name, address, description } = req.body;
 
     const response = await fetch(`https://api.geoapify.com/v1/geocode/search?text=${address}&format=json&apiKey=${process.env.GEOAPIFY_KEY}`);
     const data = await response.json();
@@ -25,6 +26,7 @@ async function createOrg(req, res) {
       managerId,
       name,
       address,
+      description,
       lon: data.results[0].lon,
       lat: data.results[0].lat
     });
@@ -34,6 +36,20 @@ async function createOrg(req, res) {
     res.status(200).json(org);
   } catch (err) {
     res.status(400).json(`Server Error: ${err}`);
+  }
+}
+
+async function readAllOrgs(req, res) {
+  try {
+    const orgs = await Org.find({});
+    
+    if (!orgs) {
+      return res.status(404).json({ message: 'no organizations not found' });
+    }
+    
+    res.status(200).json(orgs);
+  } catch (err) {
+    res.status(500).json('Server Error');
   }
 }
 

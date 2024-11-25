@@ -13,6 +13,10 @@ const orgSchema = Schema({
       type: String,
       required: true
   },
+  description: {
+    type: String,
+    required: true
+  },
   lon: {
     type: Number
   },
