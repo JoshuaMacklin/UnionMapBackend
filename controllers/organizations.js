@@ -9,11 +9,31 @@ module.exports = {
 
 async function createOrg(req, res) {
   try {
-    const org = await Org.create(req.body);
+    const { managerId, name, address } = req.body;
+
+    const response = await fetch(`https://api.geoapify.com/v1/geocode/search?text=${address}&format=json&apiKey=${process.env.GEOAPIFY_KEY}`);
+    const data = await response.json();
+    
+    if (!data) {
+      res.status(404).send("Please try a more descriptive address")
+    }
+
+    console.log(data.results[0].lon);
+    console.log(data.results[0].lat)
+
+    const newOrg = new Org({
+      managerId,
+      name,
+      address,
+      lon: data.results[0].lon,
+      lat: data.results[0].lat
+    });
+
+    const org = await Org.create(newOrg);
 
     res.status(200).json(org);
   } catch (err) {
-    res.status(400).json('No Beuno:(');
+    res.status(400).json(`Server Error: ${err}`);
   }
 }
 

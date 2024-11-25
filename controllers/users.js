@@ -1,15 +1,16 @@
 const User = require('../models/User');
 const argon2 = require('argon2');
 
-
 module.exports = {
   createUser,
+  loginUser,
   readUser,
   updateUser,
   deleteUser
 };
 
 async function createUser(req, res) {
+  console.log(req.body)
   try {
     const { username, email, password } = req.body;
     
@@ -32,12 +33,16 @@ async function createUser(req, res) {
         password: hash 
       });
       
-      await User.create(newUser);
+      try{
+        await User.create(newUser);
   
-      res.status(201).send("User has been created");
+        res.status(201).send("User has been created");
+      }catch (err){
+        res.status(404).send(err.errmsg)
+      }
 
     } catch (err) {
-      res.status(404).send("Please try again")
+      res.status(404).send(`Please try again: ${err}`)
     }
 
   } catch (err) {
@@ -45,10 +50,48 @@ async function createUser(req, res) {
   }
 }
 
+async function loginUser(req, res) {
+  console.log(req.body)
+  try {
+    let { username, email, password } = req.body;
+    
+    if (!username || !email || !password) {
+      return res.status(400).send('Username, email, and password are required');
+    }
+
+    //password validation
+    if (password.length < 5) {
+      return res.status(400).send('Password must be more than 5 characters');
+    }
+
+    // check if password + hashed is same
+    const user = await User.findOne({username});
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // const { id, username, email, organizations } = user;
+    
+    try {
+      if (await argon2.verify(user.password, password)) {
+        res.status(200).send("User Validated");
+      } else {
+        res.status(400).send("Incorrect Password");
+      }
+    } catch (err) {
+      res.status(404).send(`Please try again: ${err}`)
+    }
+
+  } catch (err) {
+    res.status(400).json(`Internal Server Error: ${err}`);
+  }
+}
 
 async function readUser(req, res) {
   try {
     const userId = req.params.id || req.body.id;
+    console.log(req.params.id);
 
     const user = await User.findById(userId);
     
@@ -56,9 +99,9 @@ async function readUser(req, res) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const { id, username, email, organization } = user;
+    const { id, username, email, organizations } = user;
     
-    res.status(200).json({ id, username, email, organization });
+    res.status(200).json({ id, username, email, organizations });
   } catch (err) {
     res.status(500).json('Server Error');
   }

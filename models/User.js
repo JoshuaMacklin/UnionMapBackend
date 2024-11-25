@@ -16,7 +16,7 @@ const userSchema = Schema({
     required: true,
     minLength: 5,
   },
-  organization: [{
+  organizations: [{
     type: Schema.Types.ObjectId,
     ref: 'Organization'
   }]

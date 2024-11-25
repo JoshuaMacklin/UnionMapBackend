@@ -12,6 +12,12 @@ const orgSchema = Schema({
   address: {
       type: String,
       required: true
+  },
+  lon: {
+    type: Number
+  },
+  lat: {
+    type: Number
   }
 });
 
